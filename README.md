@@ -37,6 +37,11 @@ Example Workflow
 
 ![](workflow-example/photo1.png)
 
+## Graph
+
+
+![](images/graph.png)
+
 
 ### As Scheduler (KSampler)
 ```text
