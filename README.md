@@ -1,4 +1,6 @@
 ## New in v1.1.0 ( New Sampler & Scheduler)
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support-yellow.svg)](https://buymeacoffee.com/capitan01r)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 Two new components have been added: Smooth Cosine Scheduler and Minimal Change Flow Sampler.
 
