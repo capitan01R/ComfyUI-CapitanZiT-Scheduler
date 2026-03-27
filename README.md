@@ -1,8 +1,35 @@
-## New in v1.1.0 ( New Sampler & Scheduler)
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support-yellow.svg)](https://buymeacoffee.com/capitan01r)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Two new components have been added: Smooth Cosine Scheduler and Minimal Change Flow Sampler.
+## New in v1.2.0
+
+### Klein Edit Scheduler
+
+![](images/34a16925-438d-4c4f-b74d-3f2363979ef4.png)
+
+
+This is a full-control flow-matching scheduler with an interactive graph widget built into the ComfyUI node. It gives you precise command over sigma spacing through two modes: **Parametric** (formula-driven) and **Draw** (hand-crafted).
+
+#### Parameters
+
+| Parameter | Default | Range | Description |
+|---|---|---|---|
+| `steps` | 4 | 1–100 | Total sigma steps. |
+| `denoise` | 1.0 | 0.001–2.0 | Starting sigma / edit strength. |
+| `sigma_min` | 0.0 | 0.0–1.0 | Ending sigma. Raise to 0.01–0.03 to soften the final step. |
+| `shift` | 1.0 | 0.01–20.0 | Timestep shift. Values >1 push more steps toward high sigma (early denoising). |
+| `curve` | 1.0 | 0.01–10.0 | Power curve. <1 bunches steps at the start; >1 bunches them at the end. |
+
+#### Interactive Graph Widget
+
+The node renders a live graph with two panels and a mode toggle button.
+
+**Parametric mode** (default) shows the computed sigma curve in the top panel and an XY pad in the bottom panel. Drag anywhere on the XY pad to simultaneously adjust `curve` (X axis, left=front-loaded → right=end-loaded) and `shift` (Y axis, up=high shift → down=low shift). The curve updates in real time as you drag.
+
+**Draw mode** (click the toggle button) converts the parametric curve into a set of draggable dots — one per sigma step. All dots are Y-draggable to set sigma values directly. Middle dots are also X-draggable to adjust horizontal spacing and tighten or loosen density at any region of the schedule. Monotonic constraints are enforced automatically so the schedule stays valid. The first and last dots (shown in teal) sync back to the `denoise` and `sigma_min` sliders respectively. Drawn sigmas are saved into the workflow and passed directly to the sampler, bypassing the parametric formula entirely.
+
+
+## New in v1.1.0 ( New Sampler & Scheduler)
 
 ![](images/new_nodes.png)
 
