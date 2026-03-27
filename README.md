@@ -5,7 +5,9 @@
 
 ### Klein Edit Scheduler
 
-![](images/34a16925-438d-4c4f-b74d-3f2363979ef4.png)
+<a href="images/34a16925-438d-4c4f-b74d-3f2363979ef4.png">
+  <img src="images/34a16925-438d-4c4f-b74d-3f2363979ef4.png" alt="KLein Edit Scheduler" width="960" height="720">
+</a>
 
 
 This is a full-control flow-matching scheduler with an interactive graph widget built into the ComfyUI node. It gives you precise command over sigma spacing through two modes: **Parametric** (formula-driven) and **Draw** (hand-crafted).
