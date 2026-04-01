@@ -1,12 +1,3 @@
-// Klein Edit Scheduler — Interactive Graph Widget (v4)
-//
-// Draw mode changes:
-//   • ALL dots are Y-draggable (first updates denoise slider, last updates sigma_min slider)
-//   • Middle dots are ALSO X-draggable — drag left/right to tighten/loosen spacing
-//   • X positions are stored so the visual density is preserved on repaint
-//   • Monotonic constraints enforced on both axes
-//   • Hidden widgets (draw_mode, custom_sigmas) are collapsed to zero height immediately
-
 import { app } from "../../scripts/app.js";
 
 const PAD      = 10;
@@ -36,7 +27,7 @@ function roundRect(ctx, x, y, w, h, r) {
 }
 
 function computeSigmas(steps, denoise, sigmaMin, shift, curve) {
-    const n = Math.max(1, steps);
+    const n = Math.max(1, parseInt(steps, 10));
     return Array.from({ length: n + 1 }, (_, i) => {
         let t = i / n;
         if (Math.abs(curve - 1.0) > 0.001) t = Math.pow(t, curve);
@@ -45,7 +36,6 @@ function computeSigmas(steps, denoise, sigmaMin, shift, curve) {
     });
 }
 
-// Collapse a widget to zero height so it never shows as a text box
 function hideWidget(node, widget) {
     if (!widget) return;
     widget.type        = "hidden_klein";
@@ -65,7 +55,6 @@ app.registerExtension({
             const node   = this;
             const W      = (name) => node.widgets?.find(w => w.name === name);
 
-            // Hide raw text widgets as soon as all widgets are registered
             setTimeout(() => {
                 hideWidget(node, W("draw_mode"));
                 hideWidget(node, W("custom_sigmas"));
@@ -89,7 +78,6 @@ app.registerExtension({
             function syncSigmasWidget() {
                 const w = W("custom_sigmas");
                 if (w && dots) {
-                    // Python only needs sigma values in order
                     const vals = JSON.stringify(dots.map(d => +d.sigma.toFixed(4)));
                     w.value = vals;
                     w.callback?.(vals);
@@ -97,11 +85,11 @@ app.registerExtension({
             }
 
             function seedDots() {
-                const steps    = W("steps")?.value     ?? 4;
-                const denoise  = W("denoise")?.value   ?? 1.0;
-                const sigmaMin = W("sigma_min")?.value ?? 0.0;
-                const shift    = W("shift")?.value     ?? 1.0;
-                const curve    = W("curve")?.value     ?? 1.0;
+                const steps    = parseInt(W("steps")?.value ?? 4, 10);
+                const denoise  = parseFloat(W("denoise")?.value ?? 1.0);
+                const sigmaMin = parseFloat(W("sigma_min")?.value ?? 0.0);
+                const shift    = parseFloat(W("shift")?.value ?? 1.0);
+                const curve    = parseFloat(W("curve")?.value ?? 1.0);
                 const sigmas   = computeSigmas(steps, denoise, sigmaMin, shift, curve);
                 const n        = sigmas.length - 1;
                 dots = sigmas.map((sigma, i) => ({ t: i / n, sigma }));
@@ -119,14 +107,13 @@ app.registerExtension({
                 computeSize(width) { return [width, WIDGET_H]; },
 
                 draw(ctx, node, width, y) {
-                    const shift    = W("shift")?.value     ?? 1.0;
-                    const curve    = W("curve")?.value     ?? 1.0;
-                    const steps    = W("steps")?.value     ?? 4;
-                    const denoise  = W("denoise")?.value   ?? 1.0;
-                    const sigmaMin = W("sigma_min")?.value ?? 0.0;
+                    const shift    = parseFloat(W("shift")?.value ?? 1.0);
+                    const curve    = parseFloat(W("curve")?.value ?? 1.0);
+                    const steps    = parseInt(W("steps")?.value ?? 4, 10);
+                    const denoise  = parseFloat(W("denoise")?.value ?? 1.0);
+                    const sigmaMin = parseFloat(W("sigma_min")?.value ?? 0.0);
                     const iW       = width - PAD * 2;
 
-                    // Reseed dots if step count changed
                     if (drawMode && (!dots || dots.length !== steps + 1)) {
                         seedDots();
                         syncSigmasWidget();
@@ -169,7 +156,6 @@ app.registerExtension({
                         ctx.beginPath(); ctx.moveTo(cX + 1, gy); ctx.lineTo(cX + cW - 1, gy); ctx.stroke();
                     }
 
-                    // Build point arrays for drawing
                     const activeDots = drawMode
                         ? dots
                         : computeSigmas(steps, denoise, sigmaMin, shift, curve)
@@ -205,7 +191,6 @@ app.registerExtension({
                         const isFirst = i === 0, isLast = i === n;
                         const isEdge  = isFirst || isLast;
 
-                        // In draw mode: all dots draggable — edge dots Y only (teal), middle dots XY (purple)
                         let r, fill, stroke;
                         if (!drawMode) {
                             r = 3; fill = "#b39dff"; stroke = "transparent";
@@ -225,7 +210,6 @@ app.registerExtension({
                         ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.fill();
                         if (drawMode) ctx.stroke();
 
-                        // Axis indicator on hovered/dragged dot in draw mode
                         if (drawMode && dragIdx === i) {
                             ctx.fillStyle = "rgba(255,255,255,0.6)";
                             ctx.font      = "8px monospace";
@@ -257,7 +241,6 @@ app.registerExtension({
                     roundRect(ctx, pX, pY, pW, pH, 5); ctx.fill(); ctx.stroke();
 
                     if (!drawMode) {
-                        // ── Parametric XY pad ─────────────────────────────────
                         ctx.strokeStyle = "#1c1c30"; ctx.lineWidth = 0.5;
                         for (let i = 1; i < 5; i++) {
                             const gx = pX + (pW / 5) * i, gy = pY + (pH / 4) * i;
@@ -307,7 +290,6 @@ app.registerExtension({
                                 const tx = pX + 10 + i * ((pW - 20) / Math.max(show.length - 1, 1));
                                 const ty = pY + pH / 2 + 8;
                                 ctx.textAlign = "center";
-                                // Teal for edges, purple for middle
                                 ctx.fillStyle = (i === 0 || i === show.length - 1) ? "#50c8f0" : "#8b6fff";
                                 ctx.font = "9px monospace";
                                 ctx.fillText(d.sigma.toFixed(3), tx, ty);
@@ -343,8 +325,8 @@ app.registerExtension({
                     // ── Draw mode dot dragging ────────────────────────────────
                     if (drawMode && this._curveBounds && dots) {
                         const { x: cX, y: cY, w: cW, h: cH } = this._curveBounds;
-                        const denoise  = W("denoise")?.value   ?? 1.0;
-                        const sigmaMin = W("sigma_min")?.value ?? 0.0;
+                        const denoise  = parseFloat(W("denoise")?.value ?? 1.0);
+                        const sigmaMin = parseFloat(W("sigma_min")?.value ?? 0.0);
                         const maxSigma = Math.max(denoise, 1.0);
                         const n        = dots.length - 1;
 
@@ -355,7 +337,6 @@ app.registerExtension({
                                 if (d < bestDist) { bestDist = d; best = i; }
                             });
                             dragIdx  = best;
-                            // Edge dots: Y only. Middle dots: XY
                             dragAxis = (dragIdx === 0 || dragIdx === n) ? "y" : "xy";
                             return dragIdx >= 0;
                         }
@@ -371,13 +352,11 @@ app.registerExtension({
                             const rawNorm = clamp((cY + cH - my - 4) / (cH - 8), 0, 1);
                             let newSigma  = rawNorm * maxSigma;
 
-                            // Clamp between neighbours
                             const loSigma = dots[dragIdx + 1]?.sigma ?? 0;
                             const hiSigma = dots[dragIdx - 1]?.sigma ?? maxSigma;
                             newSigma = clamp(newSigma, loSigma + 0.001, hiSigma - 0.001);
                             dots[dragIdx].sigma = +newSigma.toFixed(4);
 
-                            // Edge dots sync back to sliders
                             if (isFirst) {
                                 const dw = W("denoise");
                                 if (dw) { dw.value = +newSigma.toFixed(3); dw.callback?.(dw.value); }
@@ -390,7 +369,6 @@ app.registerExtension({
                             // ── X: update t (horizontal spacing) ─────────────
                             if (dragAxis === "xy") {
                                 const rawT = clamp((mx - cX) / cW, 0, 1);
-                                // Must stay between neighbours' t values with a min gap
                                 const loT = dots[dragIdx - 1]?.t ?? 0;
                                 const hiT = dots[dragIdx + 1]?.t ?? 1;
                                 const gap = Math.max(0.02, 1 / (dots.length * 4));
@@ -436,6 +414,35 @@ app.registerExtension({
             if (!node.widgets) node.widgets = [];
             node.widgets.push(gw);
             node.setSize(node.computeSize());
+
+            // ── Restore state after page refresh ─────────────────────────────
+            const origConfigure = node.onConfigure?.bind(node);
+            node.onConfigure = function(config) {
+                origConfigure?.(config);
+                setTimeout(() => {
+                    const mw = W("draw_mode");
+                    const sw = W("custom_sigmas");
+
+                    if (mw && mw.value === "draw") {
+                        drawMode = true;
+                        try {
+                            const vals = JSON.parse(sw?.value ?? "[]");
+                            if (Array.isArray(vals) && vals.length >= 2) {
+                                const n = vals.length - 1;
+                                dots = vals.map((sigma, i) => ({ t: i / n, sigma }));
+                            }
+                        } catch (e) {
+                            dots = null;
+                        }
+                    } else {
+                        drawMode = false;
+                        dots = null;
+                    }
+
+                    node.setDirtyCanvas(true, true);
+                }, 0);
+            };
+
             return result;
         };
     },
