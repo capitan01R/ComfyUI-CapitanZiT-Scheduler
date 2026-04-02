@@ -57,7 +57,27 @@ app.registerExtension({
 
             setTimeout(() => {
                 hideWidget(node, W("draw_mode"));
-                hideWidget(node, W("custom_sigmas"));
+                // custom_sigmas stays visible so the user can type values in draw mode
+
+                // Hook: when the user edits custom_sigmas, parse it and update dots (draw mode only)
+                const csw = W("custom_sigmas");
+                if (csw) {
+                    const _orig = csw.callback;
+                    csw.callback = function(value) {
+                        _orig?.call(this, value);
+                        if (drawMode) {
+                            try {
+                                const vals = JSON.parse(value ?? "[]");
+                                if (Array.isArray(vals) && vals.length >= 2) {
+                                    const n = vals.length - 1;
+                                    dots = vals.map((sigma, i) => ({ t: i / n, sigma }));
+                                    node.setDirtyCanvas(true, true);
+                                }
+                            } catch (e) { /* invalid JSON — ignore */ }
+                        }
+                    };
+                }
+
                 node.setSize(node.computeSize());
                 node.setDirtyCanvas(true, true);
             }, 0);
