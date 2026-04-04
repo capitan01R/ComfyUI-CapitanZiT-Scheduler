@@ -372,9 +372,7 @@ app.registerExtension({
                             const rawNorm = clamp((cY + cH - my - 4) / (cH - 8), 0, 1);
                             let newSigma  = rawNorm * maxSigma;
 
-                            const loSigma = dots[dragIdx + 1]?.sigma ?? 0;
-                            const hiSigma = dots[dragIdx - 1]?.sigma ?? maxSigma;
-                            newSigma = clamp(newSigma, loSigma + 0.001, hiSigma - 0.001);
+                            newSigma = clamp(newSigma, 0, maxSigma);
                             dots[dragIdx].sigma = +newSigma.toFixed(4);
 
                             if (isFirst) {
